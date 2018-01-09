@@ -31,15 +31,13 @@
  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <lcd_ili9341.h>
 #include "Adafruit_GFX.h"
-
-#include "Adafruit_ILI9341.h"
 
 #include "glcdfont.c"
 #include "stdlib.h"
 
-// Pointers are a peculiar case...typically 16-bit on AVR boards,
-// 32 bits elsewhere.  Try to accommodate both...
+
 
 #ifndef min
 #define min(a,b) (((a) < (b)) ? (a) : (b))
@@ -49,27 +47,8 @@
 #define _swap_int16_t(a, b) { int16_t t = a; a = b; b = t; }
 #endif
 
-uint32_t _freq;
 
-int8_t _cs, _dc, _rst, _sclk, _mosi, _miso;
 
-//
-//
-//Adafruit_GFX(int16_t w, int16_t h):
-//WIDTH(w), HEIGHT(h)
-//{
-//	_width = WIDTH;
-//	_height = HEIGHT;
-//	rotation = 0;
-//	cursor_y = cursor_x = 0;
-//	textsize = 1;
-//	textcolor = textbgcolor = 0xFFFF;
-//	wrap = true;
-//	_cp437 = false;
-//	gfxFont = NULL;
-//}
-
-// Bresenham's algorithm - thx wikpedia
 void writeLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color) {
 	int16_t steep = abs(y1 - y0) > abs(x1 - x0);
 	if (steep) {
@@ -109,82 +88,32 @@ void writeLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color) {
 	}
 }
 
-//void writePixel(int16_t x, int16_t y, uint16_t color) {
-//	// Overwrite in subclasses if startWrite is defined!
-//	drawPixel(x, y, color);
-//}
-
-// (x,y) is topmost point; if unsure, calling function
-// should sort endpoints or call writeLine() instead
-//void writeFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color) {
-//	// Overwrite in subclasses if startWrite is defined!
-//	// Can be just writeLine(x, y, x, y+h-1, color);
-//	// or writeFillRect(x, y, 1, h, color);
-//	drawFastVLine(x, y, h, color);
-//}
-
-// (x,y) is leftmost point; if unsure, calling function
-// should sort endpoints or call writeLine() instead
-//void writeFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color) {
-//	// Overwrite in subclasses if startWrite is defined!
-//	// Example: writeLine(x, y, x+w-1, y, color);
-//	// or writeFillRect(x, y, w, 1, color);
-//	drawFastHLine(x, y, w, color);
-//}
-
-//void writeFillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) {
-//	// Overwrite in subclasses if desired!
-//	fillRect(x, y, w, h, color);
-//}
-
-// (x,y) is topmost point; if unsure, calling function
-// should sort endpoints or call drawLine() instead
-//void drawFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color) {
-//	// Update in subclasses if desired!
-//	//startWrite();
-//	writeLine(x, y, x, y + h - 1, color);
-//	//endWrite();
-//}
-
-// (x,y) is leftmost point; if unsure, calling function
-// should sort endpoints or call drawLine() instead
-//void drawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color) {
-//	// Update in subclasses if desired!
-//	//startWrite();
-//	writeLine(x, y, x + w - 1, y, color);
-//	//endWrite();
-//}
-//
-//void fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) {
-//	// Update in subclasses if desired!
-//	//startWrite();
-//	for (int16_t i = x; i < x + w; i++) {
-//		writeFastVLine(i, y, h, color);
-//	}
-//	//endWrite();
-//}
-
-void fillScreen(uint16_t color) {
-	// Update in subclasses if desired!
-	fillRect(0, 0, _width, _height, color);
+void fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color)
+{
+    il9341_write_fill_rect(x, y, w, h, color);
 }
 
-//void drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color) {
-//	// Update in subclasses if desired!
-//	if (x0 == x1) {
-//		if (y0 > y1)
-//			_swap_int16_t(y0, y1);
-//		drawFastVLine(x0, y0, y1 - y0 + 1, color);
-//	} else if (y0 == y1) {
-//		if (x0 > x1)
-//			_swap_int16_t(x0, x1);
-//		drawFastHLine(x0, y0, x1 - x0 + 1, color);
-//	} else {
-//		//startWrite();
-//		writeLine(x0, y0, x1, y1, color);
-//		//endWrite();
-//	}
-//}
+void fillScreen(uint16_t color)
+{
+    il9341_write_fill_rect(0, 0, _width, _height, color);
+}
+
+void drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color) {
+
+	if (x0 == x1) {
+		if (y0 > y1)
+			_swap_int16_t(y0, y1);
+		il9341_write_v_line(x0, y0, y1 - y0 + 1, color);
+	} else if (y0 == y1) {
+		if (x0 > x1)
+			_swap_int16_t(x0, x1);
+		il9341_write_h_line(x0, y0, x1 - x0 + 1, color);
+	} else {
+		//startWrite();
+		writeLine(x0, y0, x1, y1, color);
+		//endWrite();
+	}
+}
 
 // Draw a circle outline
 void drawCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color) {
@@ -279,31 +208,29 @@ void fillCircleHelper(int16_t x0, int16_t y0, int16_t r, uint8_t cornername,
 		f += ddF_x;
 
 		if (cornername & 0x1) {
-			writeFastVLine(x0 + x, y0 - y, 2 * y + 1 + delta, color);
-			writeFastVLine(x0 + y, y0 - x, 2 * x + 1 + delta, color);
+			il9341_write_v_line(x0 + x, y0 - y, 2 * y + 1 + delta, color);
+			il9341_write_v_line(x0 + y, y0 - x, 2 * x + 1 + delta, color);
 		}
 		if (cornername & 0x2) {
-			writeFastVLine(x0 - x, y0 - y, 2 * y + 1 + delta, color);
-			writeFastVLine(x0 - y, y0 - x, 2 * x + 1 + delta, color);
+			il9341_write_v_line(x0 - x, y0 - y, 2 * y + 1 + delta, color);
+			il9341_write_v_line(x0 - y, y0 - x, 2 * x + 1 + delta, color);
 		}
 	}
 }
 
 void fillCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color) {
 	//startWrite();
-	writeFastVLine(x0, y0 - r, 2 * r + 1, color);
+	il9341_write_v_line(x0, y0 - r, 2 * r + 1, color);
 	fillCircleHelper(x0, y0, r, 3, 0, color);
 	//endWrite();
 }
 
 // Draw a rectangle
 void drawRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) {
-	//startWrite();
-	writeFastHLine(x, y, w, color);
-	writeFastHLine(x, y + h - 1, w, color);
-	writeFastVLine(x, y, h, color);
-	writeFastVLine(x + w - 1, y, h, color);
-	//endWrite();
+	il9341_write_h_line(x, y, w, color);
+	il9341_write_h_line(x, y + h - 1, w, color);
+	il9341_write_v_line(x, y, h, color);
+	il9341_write_v_line(x + w - 1, y, h, color);
 }
 
 // Draw a rounded rectangle
@@ -311,10 +238,10 @@ void drawRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r,
 		uint16_t color) {
 	// smarter version
 	//startWrite();
-	writeFastHLine(x + r, y, w - 2 * r, color); // Top
-	writeFastHLine(x + r, y + h - 1, w - 2 * r, color); // Bottom
-	writeFastVLine(x, y + r, h - 2 * r, color); // Left
-	writeFastVLine(x + w - 1, y + r, h - 2 * r, color); // Right
+	il9341_write_h_line(x + r, y, w - 2 * r, color); // Top
+	il9341_write_h_line(x + r, y + h - 1, w - 2 * r, color); // Bottom
+	il9341_write_v_line(x, y + r, h - 2 * r, color); // Left
+	il9341_write_v_line(x + w - 1, y + r, h - 2 * r, color); // Right
 	// draw four corners
 	drawCircleHelper(x + r, y + r, r, 1, color);
 	drawCircleHelper(x + w - r - 1, y + r, r, 2, color);
@@ -328,7 +255,7 @@ void fillRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r,
 		uint16_t color) {
 	// smarter version
 	//startWrite();
-	writeFillRect(x + r, y, w - 2 * r, h, color);
+	il9341_write_fill_rect(x + r, y, w - 2 * r, h, color);
 
 	// draw four corners
 	fillCircleHelper(x + w - r - 1, y + r, r, 1, h - 2 * r - 1, color);
@@ -375,7 +302,7 @@ void fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2,
 			a = x2;
 		else if (x2 > b)
 			b = x2;
-		writeFastHLine(a, y0, b - a + 1, color);
+		il9341_write_h_line(a, y0, b - a + 1, color);
 		//endWrite();
 		return;
 	}
@@ -406,7 +333,7 @@ void fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2,
 		 */
 		if (a > b)
 			_swap_int16_t(a, b);
-		writeFastHLine(a, y, b - a + 1, color);
+		il9341_write_h_line(a, y, b - a + 1, color);
 	}
 
 	// For lower part of triangle, find scanline crossings for segments
@@ -424,7 +351,7 @@ void fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2,
 		 */
 		if (a > b)
 			_swap_int16_t(a, b);
-		writeFastHLine(a, y, b - a + 1, color);
+		il9341_write_h_line(a, y, b - a + 1, color);
 	}
 	//endWrite();
 }
@@ -601,22 +528,22 @@ void drawChar(int16_t x, int16_t y, unsigned char c, uint16_t color,
 					if (size == 1)
 						writePixel(x + i, y + j, color);
 					else
-						writeFillRect(x + i * size, y + j * size, size, size,
+						il9341_write_fill_rect(x + i * size, y + j * size, size, size,
 								color);
 				} else if (bg != color) {
 					if (size == 1)
 						writePixel(x + i, y + j, bg);
 					else
-						writeFillRect(x + i * size, y + j * size, size, size,
+						il9341_write_fill_rect(x + i * size, y + j * size, size, size,
 								bg);
 				}
 			}
 		}
 		if (bg != color) { // If opaque, draw vertical line for last column
 			if (size == 1)
-				writeFastVLine(x + 5, y, 8, bg);
+				il9341_write_v_line(x + 5, y, 8, bg);
 			else
-				writeFillRect(x + 5 * size, y, size, 8 * size, bg);
+				il9341_write_fill_rect(x + 5 * size, y, size, 8 * size, bg);
 		}
 		//endWrite();
 
@@ -669,7 +596,7 @@ void drawChar(int16_t x, int16_t y, unsigned char c, uint16_t color,
 					if (size == 1) {
 						writePixel(x + xo + xx, y + yo + yy, color);
 					} else {
-						writeFillRect(x + (xo16 + xx) * size,
+						il9341_write_fill_rect(x + (xo16 + xx) * size,
 								y + (yo16 + yy) * size, size, size, color);
 					}
 				}
@@ -755,25 +682,7 @@ void setTextWrap(uint8_t w) {
 	wrap = w;
 }
 
-uint8_t getRotation(void) {
-	return rotation;
-}
 
-//void setRotation(uint8_t x) {
-//	rotation = (x & 3);
-//	switch (rotation) {
-//	case 0:
-//	case 2:
-//		_width = WIDTH;
-//		_height = HEIGHT;
-//		break;
-//	case 1:
-//	case 3:
-//		_width = HEIGHT;
-//		_height = WIDTH;
-//		break;
-//	}
-//}
 
 // Enable (or disable) Code Page 437-compatible charset.
 // There was an error in glcdfont.c for the longest time -- one character
@@ -803,123 +712,99 @@ void setFont(const GFXfont *f) {
 
 // Broke this out as it's used by both the PROGMEM- and RAM-resident
 // getTextBounds() functions.
-void charBounds(char c, int16_t *x, int16_t *y, int16_t *minx, int16_t *miny,
-		int16_t *maxx, int16_t *maxy) {
+void charBounds(char c, int16_t *x, int16_t *y, int16_t *minx, int16_t *miny, int16_t *maxx, int16_t *maxy)
+{
+    if (gfxFont)
+    {
+        if (c == '\n')
+        { // Newline?
+            *x = 0;    // Reset x to zero, advance y by one line
+            *y += textsize * (uint8_t) (&gfxFont->yAdvance);
+        }
+        else if (c != '\r')
+        { // Not a carriage return; is normal char
+            uint8_t first = (&gfxFont->first), last = (&gfxFont->last);
+            if ((c >= first) && (c <= last))
+            { // Char present in this font?
+                GFXglyph *glyph = &(((GFXglyph *) (&gfxFont->glyph))[c - first]);
+                uint8_t gw = (&glyph->width), gh = (&glyph->height), xa = (&glyph->xAdvance);
+                int8_t xo = (&glyph->xOffset), yo = (&glyph->yOffset);
+                if (wrap && ((*x + (((int16_t) xo + gw) * textsize)) > _width))
+                {
+                    *x = 0; // Reset x to zero, advance y by one line
+                    *y += textsize * (uint8_t) (&gfxFont->yAdvance);
+                }
+                int16_t ts = (int16_t) textsize, x1 = *x + xo * ts, y1 = *y + yo * ts, x2 = x1 + gw * ts - 1, y2 = y1
+                        + gh * ts - 1;
+                if (x1 < *minx)
+                    *minx = x1;
+                if (y1 < *miny)
+                    *miny = y1;
+                if (x2 > *maxx)
+                    *maxx = x2;
+                if (y2 > *maxy)
+                    *maxy = y2;
+                *x += xa * ts;
+            }
+        }
 
-	if (gfxFont) {
+    }
+    else
+    { // Default font
 
-		if (c == '\n') { // Newline?
-			*x = 0;    // Reset x to zero, advance y by one line
-			*y += textsize * (uint8_t) (&gfxFont->yAdvance);
-		} else if (c != '\r') { // Not a carriage return; is normal char
-			uint8_t first = (&gfxFont->first), last = (&gfxFont->last);
-			if ((c >= first) && (c <= last)) { // Char present in this font?
-				GFXglyph *glyph = &(((GFXglyph *) (&gfxFont->glyph))[c - first]);
-				uint8_t gw = (&glyph->width), gh = (&glyph->height), xa =
-						(&glyph->xAdvance);
-				int8_t xo = (&glyph->xOffset), yo = (&glyph->yOffset);
-				if (wrap
-						&& ((*x + (((int16_t) xo + gw) * textsize)) > _width)) {
-					*x = 0; // Reset x to zero, advance y by one line
-					*y += textsize * (uint8_t) (&gfxFont->yAdvance);
-				}
-				int16_t ts = (int16_t) textsize, x1 = *x + xo * ts, y1 = *y
-						+ yo * ts, x2 = x1 + gw * ts - 1, y2 = y1 + gh * ts - 1;
-				if (x1 < *minx)
-					*minx = x1;
-				if (y1 < *miny)
-					*miny = y1;
-				if (x2 > *maxx)
-					*maxx = x2;
-				if (y2 > *maxy)
-					*maxy = y2;
-				*x += xa * ts;
-			}
-		}
-
-	} else { // Default font
-
-		if (c == '\n') {                     // Newline?
-			*x = 0;                        // Reset x to zero,
-			*y += textsize * 8;             // advance y one line
-			// min/max x/y unchaged -- that waits for next 'normal' character
-		} else if (c != '\r') {  // Normal char; ignore carriage returns
-			if (wrap && ((*x + textsize * 6) > _width)) { // Off right?
-				*x = 0;                    // Reset x to zero,
-				*y += textsize * 8;         // advance y one line
-			}
-			int x2 = *x + textsize * 6 - 1, // Lower-right pixel of char
-			y2 = *y + textsize * 8 - 1;
-			if (x2 > *maxx)
-				*maxx = x2;      // Track max x, y
-			if (y2 > *maxy)
-				*maxy = y2;
-			if (*x < *minx)
-				*minx = *x;      // Track min x, y
-			if (*y < *miny)
-				*miny = *y;
-			*x += textsize * 6;             // Advance x one char
-		}
-	}
+        if (c == '\n')
+        {                     // Newline?
+            *x = 0;                        // Reset x to zero,
+            *y += textsize * 8;             // advance y one line
+            // min/max x/y unchaged -- that waits for next 'normal' character
+        }
+        else if (c != '\r')
+        {  // Normal char; ignore carriage returns
+            if (wrap && ((*x + textsize * 6) > _width))
+            { // Off right?
+                *x = 0;                    // Reset x to zero,
+                *y += textsize * 8;         // advance y one line
+            }
+            int x2 = *x + textsize * 6 - 1, // Lower-right pixel of char
+            y2 = *y + textsize * 8 - 1;
+            if (x2 > *maxx)
+                *maxx = x2;      // Track max x, y
+            if (y2 > *maxy)
+                *maxy = y2;
+            if (*x < *minx)
+                *minx = *x;      // Track min x, y
+            if (*y < *miny)
+                *miny = *y;
+            *x += textsize * 6;             // Advance x one char
+        }
+    }
 }
 
 // Pass string and a cursor position, returns UL corner and W,H.
-void getTextBounds(char *str, int16_t x, int16_t y, int16_t *x1, int16_t *y1,
-		uint16_t *w, uint16_t *h) {
-	uint8_t c; // Current character
+void getTextBounds(char *str, int16_t x, int16_t y, int16_t *x1, int16_t *y1, uint16_t *w, uint16_t *h)
+{
+    uint8_t c; // Current character
 
-	*x1 = x;
-	*y1 = y;
-	*w = *h = 0;
+    *x1 = x;
+    *y1 = y;
+    *w = *h = 0;
 
-	int16_t minx = _width, miny = _height, maxx = -1, maxy = -1;
+    int16_t minx = _width, miny = _height, maxx = -1, maxy = -1;
 
-	while ((c = *str++))
-		charBounds(c, &x, &y, &minx, &miny, &maxx, &maxy);
+    while ((c = *str++))
+        charBounds(c, &x, &y, &minx, &miny, &maxx, &maxy);
 
-	if (maxx >= minx) {
-		*x1 = minx;
-		*w = maxx - minx + 1;
-	}
-	if (maxy >= miny) {
-		*y1 = miny;
-		*h = maxy - miny + 1;
-	}
+    if (maxx >= minx)
+    {
+        *x1 = minx;
+        *w = maxx - minx + 1;
+    }
+    if (maxy >= miny)
+    {
+        *y1 = miny;
+        *h = maxy - miny + 1;
+    }
 }
 
-// Same as above, but for PROGMEM strings
-//void getTextBounds2(const __FlashStringHelper *str, int16_t x, int16_t y, int16_t *x1, int16_t *y1, uint16_t *w, uint16_t *h) {
-//	uint8_t *s = (uint8_t *) str, c;
-//
-//	*x1 = x;
-//	*y1 = y;
-//	*w = *h = 0;
-//
-//	int16_t minx = _width, miny = _height, maxx = -1, maxy = -1;
-//
-//	while ((c = (s++)))
-//		charBounds(c, &x, &y, &minx, &miny, &maxx, &maxy);
-//
-//	if (maxx >= minx) {
-//		*x1 = minx;
-//		*w = maxx - minx + 1;
-//	}
-//	if (maxy >= miny) {
-//		*y1 = miny;
-//		*h = maxy - miny + 1;
-//	}
-//}
 
-// Return the size of the display (per current rotation)
-int16_t width(void) {
-	return _width;
-}
-
-int16_t height(void) {
-	return _height;
-}
-
-//void invertDisplay(uint8_t i) {
-//	// Do nothing, must be subclassed if supported by hardware
-//}
 

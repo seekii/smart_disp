@@ -14,13 +14,14 @@
  *******************************************************************
  Library modified for ESP32 RTOS-SDK usage
  *******************************************************************/
-#ifndef _ADAFRUIT_ILI9341H_
-#define _ADAFRUIT_ILI9341H_
+#ifndef _LCD_ILI9341_H_
+#define _LCD_ILI9341_H_
 
 #include "stdint.h"
+#include "driver/spi_master.h"
 
-#define TRUE (1u)
-#define FALSE (0u)
+
+
 
 #define ILI9341_TFTWIDTH   240
 #define ILI9341_TFTHEIGHT  320
@@ -78,12 +79,10 @@
 
 #define ILI9341_GMCTRP1    0xE0
 #define ILI9341_GMCTRN1    0xE1
-/*
- #define ILI9341_PWCTR6     0xFC
 
- */
 
-// Color definitions
+
+/*Color definitions*/
 #define ILI9341_BLACK       0x0000      /*   0,   0,   0 */
 #define ILI9341_NAVY        0x000F      /*   0,   0, 128 */
 #define ILI9341_DARKGREEN   0x03E0      /*   0, 128,   0 */
@@ -104,38 +103,26 @@
 #define ILI9341_GREENYELLOW 0xAFE5      /* 173, 255,  47 */
 #define ILI9341_PINK        0xF81F
 
-void ili_init();
- void spiInit(void);
-void begin();
 
-void setRotation(uint8_t r);
-void invertDisplay(uint8_t i);
-void scrollTo(uint16_t y);
 
-// Required Non-Transaction
-void drawPixel(int16_t x, int16_t y, uint16_t color);
+void il9341_init();
+void il9341_set_rotation(uint8_t r);
+void il9341_invert_display(uint8_t i);
+void il9341_scroll_to(uint16_t y);
 
-// Transaction API
 
 void writePixel(int16_t x, int16_t y, uint16_t color);
-void writeFillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
-void writeFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color);
-void writeFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color);
+void il9341_write_fill_rect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
 
 
-// Transaction API not used by GFX
-void setAddrWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h);
-void spi_writePixel(uint16_t color);
-void writePixels(uint16_t * colors, uint32_t len);
-void writeColor(uint16_t color, uint32_t len);
-void pushColor(uint16_t color);
-
-uint8_t readcommand8(uint8_t reg, uint8_t index);
-uint16_t color565(uint8_t r, uint8_t g, uint8_t b);
 
 
-void spi_write_command(uint8_t cmd);
-void spi_write_data(uint8_t v);
-uint8_t spiRead(void);
+
+
+void writePixel(int16_t x, int16_t y, uint16_t color);
+void il9341_write_v_line(int16_t x, int16_t y, int16_t h, uint16_t color);
+void il9341_write_h_line(int16_t x, int16_t y, int16_t w, uint16_t color);
+
+void spi_il9341_transfer_callback(spi_transaction_t *t);
 
 #endif

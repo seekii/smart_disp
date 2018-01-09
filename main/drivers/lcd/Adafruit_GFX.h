@@ -50,8 +50,10 @@ void writex(uint8_t c);
 
 void setTextSize(uint8_t s);
 void setCursor(int16_t x, int16_t y);
+void setTextColor(uint16_t c);
 void setTextColor2(uint16_t c, uint16_t b);
 void setTextWrap(uint8_t w);
+void fillScreen(uint16_t color);
 // These exist only with Adafruit_GFX (no subclass overrides)
 //void drawCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color), drawCircleHelper(int16_t x0, int16_t y0, int16_t r, uint8_t cornername,
 //		uint16_t color), fillCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color), fillCircleHelper(int16_t x0, int16_t y0, int16_t r,
