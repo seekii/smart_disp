@@ -3,6 +3,7 @@
 #include "esp_wifi.h"
 #include "esp_system.h"
 #include "esp_event.h"
+#include <soc/rmt_struct.h>
 #include "esp_event_loop.h"
 #include "nvs_flash.h"
 #include "driver/gpio.h"
@@ -12,17 +13,92 @@
 #include "Adafruit_GFX.h"
 
 
+#include "ws2812.h"
 
-//#define PIN_NUM_MISO 25
-//#define PIN_NUM_MOSI 23
-//#define PIN_NUM_CLK  19
-//#define PIN_NUM_CS   22
+
+
+#define WS2812_PIN  GPIO_NUM_4
+
+#define delay_ms(ms) vTaskDelay((ms) / portTICK_RATE_MS)
+
+
+
+
+//static rgbVal pixels[PIXEL_COUNT *sizeof(rgbVal)];
+
+void rainbow(void *pvParameters)
+{
+//  const uint8_t anim_step = 10;
+  const uint8_t anim_max = 1;
+//  const uint8_t pixel_count = 8; // Number of your "pixels"
+//  const uint8_t delay = 100; // duration between color changes
+//  rgbVal color = makeRGBVal(anim_max, 0, 0);
+  uint8_t step = 0;
+//  rgbVal color2 = makeRGBVal(anim_max, 0, 0);
+//  uint8_t step2 = 0;
+ // rgbVal *pixels;
+
+
+
+  pixel_t pixel_color;
+
+    WS2812(GPIO_NUM_4, 8, RMT_CHANNEL_0);
+    setColorOrder("RGB");
+
+      void setPixel1(uint16_t index, uint8_t red, uint8_t green, uint8_t blue);
+
+//  pixels = malloc(sizeof(rgbVal) * pixel_count);
+
+  while (1) {
+
+
+
+
+
+    for (uint8_t i = 0; i < 8; i++) {
+        setPixel2(i, pixel_color);
+    }
+
+    step++;
+        switch (step)
+        {
+        case 1:
+            pixel_color.red = anim_max;
+            pixel_color.green = 0;
+            pixel_color.blue = 0;
+            break;
+        case 2:
+            pixel_color.red = 0;
+            pixel_color.green = anim_max;
+            pixel_color.blue = 0;
+            break;
+        case 3:
+            pixel_color.red = 0;
+            pixel_color.green = 0;
+            pixel_color.blue = anim_max;
+            break;
+        case 4:
+            pixel_color.red = anim_max;
+            pixel_color.green = anim_max;
+            pixel_color.blue = anim_max;
+            step=0;
+            break;
+        default:
+            step=0;
+            break;
+        }
+
+        show();
 //
-//#define PIN_NUM_DC   21
-//#define PIN_NUM_RST  18
-//#define PIN_NUM_BCKL 5
+//
+//
+//    ws2812_setColors(pixel_count, pixels);
 
 
+    printf("led task \n");
+    vTaskDelay(400 / portTICK_PERIOD_MS);
+  }
+}
 
 
 
@@ -37,17 +113,7 @@ void main_display_task(void *pvParameter)
 {
 
     il9341_init();
-
-    fillScreen(ILI9341_BLACK);
-   // il9341_write_v_line(50, 100, 100, ILI9341_ORANGE);
- //   il9341_write_h_line(0, 100, 100, ILI9341_BLUE);
- //   il9341_write_fill_rect(200, 200, 30,40, ILI9341_RED);
-
-//   il9341_write_fill_rect(0, 0, 200,200, ILI9341_BLACK);
-
-//    drawTriangle(10,10, 20, 40, 50, 40, ILI9341_ORANGE);
-//    drawCircle(40, 50, 40, ILI9341_ORANGE);
-
+   // fillScreen(ILI9341_BLACK);
 
     int x =  0;
     int y =0;
@@ -61,8 +127,10 @@ void main_display_task(void *pvParameter)
     writex('a');
 
     while (true) {
+
+
         drawChar(100, 100, x, ILI9341_ORANGE, ILI9341_BLACK, 8);
-        writePixel(x, y, ILI9341_GREEN);
+      //  writePixel(x, y, ILI9341_GREEN);
         if(x>240){
         	x=0;
         	y++;
@@ -80,8 +148,9 @@ void main_display_task(void *pvParameter)
 
         writex(x);
 
+
         vTaskDelay(300 / portTICK_PERIOD_MS);
-        printf("blink \n");
+
     }
 }
 
@@ -89,10 +158,6 @@ void main_display_task(void *pvParameter)
 
 void app_main(void)
 {
-
-	spi_il9341_config();
-
-
     nvs_flash_init();
 //    tcpip_adapter_init();
 //    ESP_ERROR_CHECK( esp_event_loop_init(event_handler, NULL) );
@@ -111,9 +176,11 @@ void app_main(void)
 //    ESP_ERROR_CHECK( esp_wifi_start() );
 //    ESP_ERROR_CHECK( esp_wifi_connect() );
 
+    spi_il9341_config();
 
-    xTaskCreate(&main_display_task, "main_display_task", configMINIMAL_STACK_SIZE, NULL, 5, NULL);
 
+    xTaskCreate(main_display_task, "main_display_task", configMINIMAL_STACK_SIZE, NULL, 5, NULL);
+  //  xTaskCreate(rainbow, "ws2812 rainbow demo", 4096, NULL, 5, NULL);
 
 
 }

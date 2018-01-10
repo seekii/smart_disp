@@ -655,13 +655,6 @@ void setCursor(int16_t x, int16_t y) {
 	cursor_y = y;
 }
 
-int16_t getCursorX(void) {
-	return cursor_x;
-}
-
-int16_t getCursorY(void) {
-	return cursor_y;
-}
 
 void setTextSize(uint8_t s) {
 	textsize = (s > 0) ? s : 1;

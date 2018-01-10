@@ -8,5 +8,5 @@
 #
 
 
-COMPONENT_SRCDIRS = . drivers/lcd/ drivers/spi/
-COMPONENT_ADD_INCLUDEDIRS = . drivers/lcd/ drivers/spi/
+COMPONENT_SRCDIRS = . drivers/lcd/ drivers/spi/ /drivers/neo_pixel/
+COMPONENT_ADD_INCLUDEDIRS = . drivers/lcd/ drivers/spi/ /drivers/neo_pixel/
