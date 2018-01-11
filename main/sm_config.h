@@ -5,7 +5,7 @@
 #include "driver/spi_master.h"
 #include "driver/gpio.h"
 #include "driver/spi_master.h"
-
+#include <driver/rmt.h>
 
 
 #define TRUE (1u)
@@ -31,8 +31,11 @@
 
 
 
+#define PIN_WS2812_LED        GPIO_NUM_4
+#define RMT_CH_WS2812_LED  RMT_CHANNEL_0
 
 
+#define CNT_WS2812_LED                8u
 
 
 

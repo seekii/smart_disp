@@ -47,18 +47,16 @@ typedef struct {
  * @endcode
  */
 
-    void WS2812(gpio_num_t gpioNum, uint16_t pixelCount, int channel);
-    void show();
-    void setColorOrder(char *order);
-    void setPixel1(uint16_t index, uint8_t red, uint8_t green, uint8_t blue);
-    void setPixel2(uint16_t index, pixel_t pixel);
-    void setPixel3(uint16_t index, uint32_t pixel);
-    void setHSBPixel(uint16_t index, uint16_t hue, uint8_t saturation, uint8_t brightness);
-    void clear();
+    void ws2812_init(gpio_num_t gpioNum, uint16_t pixelCount, int channel);
+    void ws2812_show();
+    void ws2812_set_color_order(char *order);
+    void ws2812_set_led_rgb(uint16_t index, uint8_t red, uint8_t green, uint8_t blue);
+    void ws2812_set_led_pixel(uint16_t index, pixel_t pixel);
+    void ws2812_set_led_u32(uint16_t index, uint32_t pixel);
+    void ws2812_set_led_hsb(uint16_t index, uint16_t hue, uint8_t saturation, uint8_t brightness);
+    void ws2812_clear();
 
-    char          *colorOrder;
-    uint16_t       pixelCount;
-    rmt_channel_t  channel;
+
 
 
 #endif /* MAIN_WS2812_H_ */
