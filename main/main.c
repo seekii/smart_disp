@@ -13,10 +13,11 @@
 #include "Adafruit_GFX.h"
 #include "ws2812.h"
 
-
-
-
-
+extern const unsigned char water [];
+extern const unsigned char bulb [];
+extern const unsigned short bulb_45[];
+extern const unsigned short mosque[];
+extern const unsigned char bulb_gs[];
 
 void ws2812_task(void *pvParameters)
 {
@@ -88,44 +89,74 @@ esp_err_t event_handler(void *ctx, system_event_t *event)
 void main_display_task(void *pvParameter)
 {
     il9341_init();
-
+    il9341_write_fill_rect(0,0,320,240,ILI9341_BLACK);
 
     uint16_t x = 0;
     uint16_t y = 0;
 
     cp437(0);
     setTextWrap(1);
-    setTextSize(2);
-    setTextColor(ILI9341_GREEN);
-    setCursor(10, 10);
-    writex('f');
-    writex('a');
+    setTextSize(3);
 
+    setTextColor(ILI9341_ORANGE);
+    setCursor(60, 5);
+    writeText("3.81");
+
+    setTextColor(ILI9341_GREEN);
+    setCursor(60, 30);
+    writeText("6.35");
+
+
+    setTextColor(ILI9341_BLUE);
+    setCursor(60, 65);
+    writeText("0.21");
+
+    setTextColor(ILI9341_GREEN);
+    setCursor(60, 90);
+    writeText("1.05");
+
+
+    setTextColor(ILI9341_RED);
+    setCursor(60, 125);
+    writeText("+21.3");
+
+    setTextColor(ILI9341_CYAN);
+    setCursor(60, 150);
+    writeText("-17.1");
+
+
+
+
+    setTextColor(ILI9341_LIGHTGREY);
+    setCursor(10, 220);
+    writeText("12.04.2017 22:34");
+
+    //drawRoundRect(2,2, 72, 27,2,ILI9341_LIGHTGREY);
+
+    drawRGBBitmap(0, 5, (uint16_t*)bulb_45, 45, 45);
+
+   // drawRGBBitmap(0, 68, (uint16_t*)mosque, 45, 45);
+    drawBitmap(0, 68, (uint8_t*) water, 45, 45, ILI9341_WHITE);
+
+    drawBitmap(0, 131, (uint8_t*) bulb, 45, 45, ILI9341_WHITE);
+
+
+    uint8_t xx = 0;
     while (true)
     {
-        drawChar(100, 100, x, ILI9341_ORANGE, ILI9341_BLACK, 8);
-        writePixel(x, y, ILI9341_GREEN);
+      //  drawChar(100, 100, x, ILI9341_ORANGE, ILI9341_BLACK, 8);
 
 
-        if (x > 240)
+        if(xx)
         {
-            x = 0;
-            y++;
-            setCursor(10, 10);
-            writex('d');
-            writex('a');
+            drawBitmap(0, 131, (uint8_t*)bulb, 45, 45, ILI9341_WHITE);
+            xx=0;
         }
         else
         {
-            x++;
+            drawBitmap(0, 131, (uint8_t*)bulb, 45, 45, ILI9341_RED);
+            xx=1;
         }
-
-        if (y > 320)
-        {
-            y = 0;
-        }
-
-        writex(x);
 
         vTaskDelay(300 / portTICK_PERIOD_MS);
 

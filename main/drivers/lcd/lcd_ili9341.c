@@ -307,7 +307,7 @@ void writePixel(int16_t x, int16_t y, uint16_t color)
 /*Draw rectangle fast*/
 void il9341_write_fill_rect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color)
 {
-	if ((x >= _width) || (y >= _height))
+	if ((x > _width) || (y > _height))
 	{
 		return;
 	}

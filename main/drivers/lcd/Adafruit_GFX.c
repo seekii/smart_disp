@@ -36,7 +36,7 @@
 
 #include "glcdfont.c"
 #include "stdlib.h"
-
+#include "string.h"
 
 
 #ifndef min
@@ -46,6 +46,27 @@
 #ifndef _swap_int16_t
 #define _swap_int16_t(a, b) { int16_t t = a; a = b; b = t; }
 #endif
+
+
+
+
+
+extern int16_t _width;
+extern int16_t _height; // Display w/h as modified by current rotation
+//extern uint8_t rotation;
+
+static int16_t cursor_x;
+static int16_t cursor_y;
+static uint16_t textcolor;
+static uint16_t textbgcolor;
+static uint8_t textsize;
+
+static uint8_t wrap;   // If set, 'wrap' text at right edge of display
+static uint8_t _cp437; // If set, use correct CP437 charset (default is off)
+static GFXfont *gfxFont;
+
+
+
 
 
 
@@ -358,31 +379,11 @@ void fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2,
 
 // BITMAP / XBITMAP / GRAYSCALE / RGB BITMAP FUNCTIONS ---------------------
 
-// Draw a PROGMEM-resident 1-bit image at the specified (x,y) position,
-// using the specified foreground color (unset bits are transparent).
-//void drawBitmap(int16_t x, int16_t y, const uint8_t bitmap[], int16_t w, int16_t h, uint16_t color) {
-//
-//	int16_t byteWidth = (w + 7) / 8; // Bitmap scanline pad = whole byte
-//	uint8_t byte = 0;
-//
-//	//startWrite();
-//	for (int16_t j = 0; j < h; j++, y++) {
-//		for (int16_t i = 0; i < w; i++) {
-//			if (i & 7)
-//				byte <<= 1;
-//			else
-//				byte = &bitmap[j * byteWidth + i / 8];
-//			if (byte & 0x80)
-//				writePixel(x + i, y, color);
-//		}
-//	}
-//	//endWrite();
-//}
+
 
 // Draw a RAM-resident 1-bit image at the specified (x,y) position,
 // using the specified foreground color (unset bits are transparent).
-void drawBitmap(int16_t x, int16_t y, uint8_t *bitmap, int16_t w, int16_t h,
-		uint16_t color) {
+void drawBitmap(int16_t x, int16_t y, uint8_t *bitmap, int16_t w, int16_t h, uint16_t color) {
 
 	int16_t byteWidth = (w + 7) / 8; // Bitmap scanline pad = whole byte
 	uint8_t byte = 0;
@@ -401,73 +402,11 @@ void drawBitmap(int16_t x, int16_t y, uint8_t *bitmap, int16_t w, int16_t h,
 	//endWrite();
 }
 
-// Draw PROGMEM-resident XBitMap Files (*.xbm), exported from GIMP,
-// Usage: Export from GIMP to *.xbm, rename *.xbm to *.c and open in editor.
-// C Array can be directly used with this function.
-// There is no RAM-resident version of this function; if generating bitmaps
-// in RAM, use the format defined by drawBitmap() and call that instead.
-void drawXBitmap(int16_t x, int16_t y, const uint8_t bitmap[], int16_t w,
-		int16_t h, uint16_t color) {
 
-	int16_t byteWidth = (w + 7) / 8; // Bitmap scanline pad = whole byte
-	uint8_t byte = 0;
-
-	//startWrite();
-	for (int16_t j = 0; j < h; j++, y++) {
-		for (int16_t i = 0; i < w; i++) {
-			if (i & 7)
-				byte >>= 1;
-			else
-				byte = &bitmap[j * byteWidth + i / 8];
-			// Nearly identical to drawBitmap(), only the bit order
-			// is reversed here (left-to-right = LSB to MSB):
-			if (byte & 0x01)
-				writePixel(x + i, y, color);
-		}
-	}
-	//endWrite();
-}
-
-// Draw a RAM-resident 8-bit image (grayscale) at the specified (x,y)
-// pos.  Specifically for 8-bit display devices such as IS31FL3731;
-// no color reduction/expansion is performed.
-void drawGrayscaleBitmap(int16_t x, int16_t y, uint8_t *bitmap, int16_t w,
-		int16_t h) {
-	//startWrite();
-	for (int16_t j = 0; j < h; j++, y++) {
-		for (int16_t i = 0; i < w; i++) {
-			writePixel(x + i, y, bitmap[j * w + i]);
-		}
-	}
-	//endWrite();
-}
-
-// Draw a RAM-resident 8-bit image (grayscale) with a 1-bit mask
-// (set bits = opaque, unset bits = clear) at the specified (x,y) pos.
-// BOTH buffers (grayscale and mask) must be RAM-resident, no mix-and-
-// match.  Specifically for 8-bit display devices such as IS31FL3731;
-// no color reduction/expansion is performed.
-void drawGrayscaleBitmap2(int16_t x, int16_t y, uint8_t *bitmap, uint8_t *mask,
-		int16_t w, int16_t h) {
-	int16_t bw = (w + 7) / 8; // Bitmask scanline pad = whole byte
-	uint8_t byte = 0;
-	//startWrite();
-	for (int16_t j = 0; j < h; j++, y++) {
-		for (int16_t i = 0; i < w; i++) {
-			if (i & 7)
-				byte <<= 1;
-			else
-				byte = mask[j * bw + i / 8];
-			if (byte & 0x80) {
-				writePixel(x + i, y, bitmap[j * w + i]);
-			}
-		}
-	}
-	//endWrite();
-}
 
 // Draw a RAM-resident 16-bit image (RGB 5/6/5) at the specified (x,y)
 // position.  For 16-bit display devices; no color reduction performed.
+
 void drawRGBBitmap(int16_t x, int16_t y, uint16_t *bitmap, int16_t w, int16_t h) {
 	//startWrite();
 	for (int16_t j = 0; j < h; j++, y++) {
@@ -482,8 +421,7 @@ void drawRGBBitmap(int16_t x, int16_t y, uint16_t *bitmap, int16_t w, int16_t h)
 // (set bits = opaque, unset bits = clear) at the specified (x,y) pos.
 // BOTH buffers (color and mask) must be RAM-resident, no mix-and-match.
 // For 16-bit display devices; no color reduction performed.
-void drawRGBBitmap2(int16_t x, int16_t y, uint16_t *bitmap, uint8_t *mask,
-		int16_t w, int16_t h) {
+void drawRGBBitmapMask(int16_t x, int16_t y, uint16_t *bitmap, uint8_t *mask, int16_t w, int16_t h) {
 	int16_t bw = (w + 7) / 8; // Bitmask scanline pad = whole byte
 	uint8_t byte = 0;
 	//startWrite();
@@ -609,7 +547,7 @@ void drawChar(int16_t x, int16_t y, unsigned char c, uint16_t color,
 }
 
 
-void writex(uint8_t c) {
+void writeChar(uint8_t c) {
 
 	if (!gfxFont) { // 'Classic' built-in font
 
@@ -649,6 +587,20 @@ void writex(uint8_t c) {
 
 	}
 }
+
+
+void writeText(char *str)
+{
+    uint16_t len = strlen((char*)str);
+
+    for(int i=0; i< len; i++)
+    {
+        writeChar(*(str+i));
+    }
+
+
+}
+
 
 void setCursor(int16_t x, int16_t y) {
 	cursor_x = x;
@@ -799,5 +751,14 @@ void getTextBounds(char *str, int16_t x, int16_t y, int16_t *x1, int16_t *y1, ui
     }
 }
 
+
+int16_t getCursorX(void)
+{
+    return cursor_x;
+}
+int16_t getCursorY(void)
+{
+    return cursor_y;
+}
 
 
