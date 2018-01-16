@@ -802,7 +802,7 @@ int16_t getCursorY(void)
 
 void gfx_write_float(int16_t x, int16_t y, uint16_t color, uint8_t size, float val, uint8_t dec_pl, uint8_t use_sign, PRINT_DIRECTION direction )
 {
-    char *buff = (char*) malloc(20);
+    char buff[20];
     uint16_t len = 0;
 
     if (use_sign)
@@ -822,12 +822,11 @@ void gfx_write_float(int16_t x, int16_t y, uint16_t color, uint8_t size, float v
 
     writeText(buff,direction);
 
-    free(buff);
 }
 
 void gfx_write_dec(int16_t x, int16_t y, uint16_t color, uint8_t size, uint32_t val, uint8_t use_sign,PRINT_DIRECTION direction )
 {
-    char *buff = (char*) malloc(20);
+    char buff[20];
     uint16_t len = 0;
 
     if (use_sign)
@@ -846,8 +845,6 @@ void gfx_write_dec(int16_t x, int16_t y, uint16_t color, uint8_t size, uint32_t 
     setTextSize(size);
 
     writeText(buff, direction);
-
-    free(buff);
 }
 
 
