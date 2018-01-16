@@ -31,9 +31,8 @@
  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <lcd_gfx.h>
 #include <lcd_ili9341.h>
-#include "Adafruit_GFX.h"
-
 #include "glcdfont.c"
 #include "stdlib.h"
 #include "string.h"
@@ -377,9 +376,9 @@ void fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2,
 	//endWrite();
 }
 
-// BITMAP / XBITMAP / GRAYSCALE / RGB BITMAP FUNCTIONS ---------------------
 
 
+/*--------------BITMAP / XBITMAP / GRAYSCALE / RGB BITMAP FUNCTIONS ---------------------*/
 
 // Draw a RAM-resident 1-bit image at the specified (x,y) position,
 // using the specified foreground color (unset bits are transparent).
@@ -491,13 +490,13 @@ void drawChar(int16_t x, int16_t y, unsigned char c, uint16_t color,
 		// newlines, returns, non-printable characters, etc.  Calling
 		// drawChar() directly with 'bad' characters of font may cause mayhem!
 
-		c -= (uint8_t) (&gfxFont->first);
-		GFXglyph *glyph = &(((GFXglyph *) &gfxFont->glyph))[c];
-		uint8_t *bitmap = (uint8_t *) &gfxFont->bitmap;
+		c -= (uint8_t) (gfxFont->first);
+		GFXglyph *glyph = &(((GFXglyph *) gfxFont->glyph))[c];
+		uint8_t *bitmap = (uint8_t *) gfxFont->bitmap;
 
-		uint16_t bo = (&glyph->bitmapOffset);
-		uint8_t w = (&glyph->width), h = (&glyph->height);
-		int8_t xo = (&glyph->xOffset), yo = (&glyph->yOffset);
+		uint16_t bo = (glyph->bitmapOffset);
+		uint8_t w = (glyph->width), h = (glyph->height);
+		int8_t xo = (glyph->xOffset), yo = (glyph->yOffset);
 		uint8_t xx, yy, bits = 0, bit = 0;
 		int16_t xo16 = 0, yo16 = 0;
 
@@ -528,7 +527,7 @@ void drawChar(int16_t x, int16_t y, unsigned char c, uint16_t color,
 		for (yy = 0; yy < h; yy++) {
 			for (xx = 0; xx < w; xx++) {
 				if (!(bit++ & 7)) {
-					bits = (&bitmap[bo++]);
+					bits = (bitmap[bo++]);
 				}
 				if (bits & 0x80) {
 					if (size == 1) {
@@ -547,64 +546,103 @@ void drawChar(int16_t x, int16_t y, unsigned char c, uint16_t color,
 }
 
 
-void writeChar(uint8_t c) {
+void gfx_write_char(uint8_t c, PRINT_DIRECTION direction)
+{
 
-	if (!gfxFont) { // 'Classic' built-in font
+    if(!gfxFont)
+    { // 'Classic' built-in font
 
-		if (c == '\n') {                        // Newline?
-			cursor_x = 0;                     // Reset x to zero,
-			cursor_y += textsize * 8;          // advance y one line
-		} else if (c != '\r') {                 // Ignore carriage returns
-			if (wrap && ((cursor_x + textsize * 6) > _width)) { // Off right?
-				cursor_x = 0;                 // Reset x to zero,
-				cursor_y += textsize * 8;      // advance y one line
-			}
-			drawChar(cursor_x, cursor_y, c, textcolor, textbgcolor, textsize);
-			cursor_x += textsize * 6;          // Advance x one char
-		}
+        if(c == '\n')
+        {                        // Newline?
+            cursor_x = 0;                     // Reset x to zero,
+            cursor_y += textsize * 8;          // advance y one line
+        }
+        else if(c != '\r')
+        {                 // Ignore carriage returns
+            if(wrap && ((cursor_x + textsize * 6) > _width))
+            { // Off right?
+                cursor_x = 0;                 // Reset x to zero,
+                cursor_y += textsize * 8;      // advance y one line
+            }
+            drawChar(cursor_x, cursor_y, c, textcolor, textbgcolor, textsize);
+            if(direction == DIR_FORWARD)
+            {
+                cursor_x += textsize * 6;          // Advance x one char
+            }
+            else
+            {
+                cursor_x -= textsize * 6;          // Advance x one char
+            }
+        }
 
-	} else { // Custom font
+    }
+    else
+    { // Custom font
 
-		if (c == '\n') {
-			cursor_x = 0;
-			cursor_y += (int16_t) textsize * (uint8_t)(&gfxFont->yAdvance);
-		} else if (c != '\r') {
-			uint8_t first = (&gfxFont->first);
-			if ((c >= first) && (c <= (uint8_t)(&gfxFont->last))) {
-				GFXglyph *glyph = &(((GFXglyph *) (&gfxFont->glyph))[c - first]);
-				uint8_t w = (&glyph->width), h = (&glyph->height);
-				if ((w > 0) && (h > 0)) { // Is there an associated bitmap?
-					int16_t xo = (int8_t)(&glyph->xOffset); // sic
-					if (wrap && ((cursor_x + textsize * (xo + w)) > _width)) {
-						cursor_x = 0;
-						cursor_y += (int16_t) textsize * (uint8_t)(&gfxFont->yAdvance);
-					}
-					drawChar(cursor_x, cursor_y, c, textcolor, textbgcolor, textsize);
-				}
-				cursor_x += (uint8_t)(&glyph->xAdvance) * (int16_t) textsize;
-			}
-		}
+        if(c == '\n')
+        {
+            cursor_x = 0;
+            cursor_y += (int16_t) textsize * (uint8_t) (gfxFont->yAdvance);
+        }
+        else if(c != '\r')
+        {
+            uint8_t first = (gfxFont->first);
+            if((c >= first) && (c <= (uint8_t) (gfxFont->last)))
+            {
+                GFXglyph *glyph = &(((GFXglyph *) (gfxFont->glyph))[c - first]);
+                uint8_t w = (glyph->width), h = (glyph->height);
+                if((w > 0) && (h > 0))
+                { // Is there an associated bitmap?
+                    int16_t xo = (int8_t) (glyph->xOffset); // sic
+                    if(wrap && ((cursor_x + textsize * (xo + w)) > _width))
+                    {
+                        cursor_x = 0;
+                        cursor_y += (int16_t) textsize * (uint8_t) (gfxFont->yAdvance);
+                    }
+                    drawChar(cursor_x, cursor_y, c, textcolor, textbgcolor, textsize);
+                }
+                if(direction == DIR_FORWARD)
+                {
+                    cursor_x += (uint8_t) (glyph->xAdvance) * (int16_t) textsize;
+                }
+                else
+                {
+                    cursor_x -= (uint8_t) (glyph->xAdvance) * (int16_t) textsize;
+                }
+            }
+        }
 
-	}
+    }
 }
 
 
-void writeText(char *str)
+void writeText(char *str, PRINT_DIRECTION direction)
 {
-    uint16_t len = strlen((char*)str);
+    uint16_t len = strlen((char*) str);
 
-    for(int i=0; i< len; i++)
+    if(direction == DIR_FORWARD)
     {
-        writeChar(*(str+i));
+        for(int16_t i = 0; i < len; i++)
+        {
+            gfx_write_char(*(str + i), direction);
+        }
+
+    }
+    else
+    {
+        for(int16_t i = len; i > 0 ; i--)
+        {
+            gfx_write_char(*(str + i), direction);
+        }
     }
 
-
 }
 
 
-void setCursor(int16_t x, int16_t y) {
-	cursor_x = x;
-	cursor_y = y;
+void setCursor(int16_t x, int16_t y)
+{
+    cursor_x = x;
+    cursor_y = y;
 }
 
 
@@ -657,27 +695,27 @@ void setFont(const GFXfont *f) {
 
 // Broke this out as it's used by both the PROGMEM- and RAM-resident
 // getTextBounds() functions.
-void charBounds(char c, int16_t *x, int16_t *y, int16_t *minx, int16_t *miny, int16_t *maxx, int16_t *maxy)
+void getCharBounds(char c, int16_t *x, int16_t *y, int16_t *minx, int16_t *miny, int16_t *maxx, int16_t *maxy)
 {
     if (gfxFont)
     {
         if (c == '\n')
         { // Newline?
             *x = 0;    // Reset x to zero, advance y by one line
-            *y += textsize * (uint8_t) (&gfxFont->yAdvance);
+            *y += textsize * (uint8_t) (gfxFont->yAdvance);
         }
         else if (c != '\r')
         { // Not a carriage return; is normal char
-            uint8_t first = (&gfxFont->first), last = (&gfxFont->last);
+            uint8_t first = (gfxFont->first), last = (gfxFont->last);
             if ((c >= first) && (c <= last))
             { // Char present in this font?
-                GFXglyph *glyph = &(((GFXglyph *) (&gfxFont->glyph))[c - first]);
-                uint8_t gw = (&glyph->width), gh = (&glyph->height), xa = (&glyph->xAdvance);
-                int8_t xo = (&glyph->xOffset), yo = (&glyph->yOffset);
+                GFXglyph *glyph = &(((GFXglyph *) (gfxFont->glyph))[c - first]);
+                uint8_t gw = (glyph->width), gh = (glyph->height), xa = (glyph->xAdvance);
+                int8_t xo = (glyph->xOffset), yo = (glyph->yOffset);
                 if (wrap && ((*x + (((int16_t) xo + gw) * textsize)) > _width))
                 {
                     *x = 0; // Reset x to zero, advance y by one line
-                    *y += textsize * (uint8_t) (&gfxFont->yAdvance);
+                    *y += textsize * (uint8_t) (gfxFont->yAdvance);
                 }
                 int16_t ts = (int16_t) textsize, x1 = *x + xo * ts, y1 = *y + yo * ts, x2 = x1 + gw * ts - 1, y2 = y1
                         + gh * ts - 1;
@@ -737,7 +775,7 @@ void getTextBounds(char *str, int16_t x, int16_t y, int16_t *x1, int16_t *y1, ui
     int16_t minx = _width, miny = _height, maxx = -1, maxy = -1;
 
     while ((c = *str++))
-        charBounds(c, &x, &y, &minx, &miny, &maxx, &maxy);
+        getCharBounds(c, &x, &y, &minx, &miny, &maxx, &maxy);
 
     if (maxx >= minx)
     {
@@ -760,5 +798,60 @@ int16_t getCursorY(void)
 {
     return cursor_y;
 }
+
+
+void gfx_write_float(int16_t x, int16_t y, uint16_t color, uint8_t size, float val, uint8_t dec_pl, uint8_t use_sign, PRINT_DIRECTION direction )
+{
+    char *buff = (char*) malloc(20);
+    uint16_t len = 0;
+
+    if (use_sign)
+    {
+        len = sprintf(buff, "%+.*f",dec_pl, val);
+    }
+    else
+    {
+        len = sprintf(buff, "%.*f",dec_pl, val);
+    }
+
+    buff[len] = '\0';
+
+    setCursor( x,  y);
+    setTextColor(color);
+    setTextSize(size);
+
+    writeText(buff,direction);
+
+    free(buff);
+}
+
+void gfx_write_dec(int16_t x, int16_t y, uint16_t color, uint8_t size, uint32_t val, uint8_t use_sign,PRINT_DIRECTION direction )
+{
+    char *buff = (char*) malloc(20);
+    uint16_t len = 0;
+
+    if (use_sign)
+    {
+        len = sprintf(buff, "%+d", val);
+    }
+    else
+    {
+        len = sprintf(buff, "%d", val);
+    }
+
+    buff[len] = '\0';
+
+    setCursor( x,  y);
+    setTextColor(color);
+    setTextSize(size);
+
+    writeText(buff, direction);
+
+    free(buff);
+}
+
+
+
+
 
 

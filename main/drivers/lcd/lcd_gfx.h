@@ -4,6 +4,47 @@
 #include "gfxfont.h"
 #include "stdint.h"
 
+
+
+typedef enum
+{
+    FONT_SIZE_1 = 1,
+    FONT_SIZE_2,
+    FONT_SIZE_3,
+    FONT_SIZE_4,
+    FONT_SIZE_5,
+}FONT_SIZE;
+
+typedef enum
+{
+    DEC_PLACES_0,
+    DEC_PLACES_1,
+    DEC_PLACES_2,
+    DEC_PLACES_3,
+    DEC_PLACES_4,
+    DEC_PLACES_5
+}DECIMAL_PLACES;
+
+
+typedef enum
+{
+    WITHOUT_SIGN,
+    WITH_SIGN
+} SING_USE;
+
+
+typedef enum
+{
+    DIR_FORWARD,
+    DIR_BACKWARD
+} PRINT_DIRECTION;
+
+
+
+
+
+
+
 //Adafruit_GFX(int16_t w, int16_t h); // Constructor
 
 // This MUST be defined by the subclass:
@@ -56,8 +97,8 @@ void drawBitmap(int16_t x, int16_t y, uint8_t *bitmap, int16_t w, int16_t h, uin
 void drawRGBBitmap(int16_t x, int16_t y, uint16_t *bitmap, int16_t w,int16_t h);
 void drawRGBBitmapMask(int16_t x, int16_t y, uint16_t *bitmap, uint8_t *mask, int16_t w, int16_t h);
 void drawChar(int16_t x, int16_t y, unsigned char c,uint16_t color, uint16_t bg, uint8_t size);
-void writeChar(uint8_t c);
-void writeText(char *str); //TODO write source
+void gfx_write_char(uint8_t c, PRINT_DIRECTION direction);
+void writeText(char *str, PRINT_DIRECTION direction);
 
 
 void setCursor(int16_t x, int16_t y);
@@ -81,10 +122,14 @@ uint8_t getRotation(void);
 int16_t getCursorX(void);
 int16_t getCursorY(void);
 
-void charBounds(char c, int16_t *x, int16_t *y, int16_t *minx, int16_t *miny, int16_t *maxx, int16_t *maxy);
+void getCharBounds(char c, int16_t *x, int16_t *y, int16_t *minx, int16_t *miny, int16_t *maxx, int16_t *maxy);
 
 
 
+/*Custom text out*/
 
+
+void gfx_write_float(int16_t x, int16_t y, uint16_t color, uint8_t size, float val, uint8_t dec_pl, uint8_t use_sign,PRINT_DIRECTION direction  );
+void gfx_write_dec(int16_t x, int16_t y, uint16_t color, uint8_t size, uint32_t val, uint8_t use_sign,PRINT_DIRECTION direction  );
 
 #endif // _ADAFRUIT_GFX_H

@@ -113,7 +113,7 @@ void ws2812_init(gpio_num_t dinPin, uint16_t ipixelCount, int ichannel) {
     // on Neopixel bit is TWO bits of output ... the high value and the low value
 
 
-    colorOrder = (char *)"RGB";
+    colorOrder = (char *)"GRB";
     ws2812_clear();
 
     rmt_config_t config;
