@@ -13,11 +13,9 @@
 #include <lcd_ili9341.h>
 #include "ws2812.h"
 
-extern const unsigned char water [];
-extern const unsigned char bulb [];
-extern const unsigned short bulb_45[];
-extern const unsigned short mosque[];
-extern const unsigned char bulb_gs[];
+extern const unsigned char bmp_water [];
+extern const unsigned char bmp_bulb [];
+extern const unsigned char bmp_temperature [];
 
 void ws2812_task(void *pvParameters)
 {
@@ -137,12 +135,12 @@ void main_display_task(void *pvParameter)
 
     //drawRoundRect(2,2, 72, 27,2,ILI9341_LIGHTGREY);
 
-    drawRGBBitmap(0, 5, (uint16_t*)bulb_45, 45, 45);
 
-   // drawRGBBitmap(0, 68, (uint16_t*)mosque, 45, 45);
-    drawBitmap(0, 68, (uint8_t*) water, 45, 45, ILI9341_WHITE);
 
-    drawBitmap(0, 131, (uint8_t*) bulb, 45, 45, ILI9341_WHITE);
+    drawBitmap(0, 5, (uint8_t*) bmp_bulb, 48, 48, ILI9341_WHITE);
+    drawBitmap(0, 68, (uint8_t*) bmp_water, 48, 48, ILI9341_WHITE);
+
+
 
 
     uint8_t xx = 0;
@@ -153,12 +151,12 @@ void main_display_task(void *pvParameter)
 
         if(xx)
         {
-            drawBitmap(0, 131, (uint8_t*)bulb, 45, 45, ILI9341_WHITE);
+            drawBitmap(0, 131, (uint8_t*)bmp_temperature, 48, 48, ILI9341_WHITE);
             xx=0;
         }
         else
         {
-            drawBitmap(0, 131, (uint8_t*)bulb, 45, 45, ILI9341_RED);
+            drawBitmap(0, 131, (uint8_t*)bmp_temperature, 48, 48, ILI9341_RED);
             xx=1;
         }
 
