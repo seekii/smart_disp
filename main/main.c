@@ -13,6 +13,8 @@
 #include <lcd_ili9341.h>
 #include "ws2812.h"
 
+
+
 extern const unsigned char bmp_water [];
 extern const unsigned char bmp_bulb [];
 extern const unsigned char bmp_temperature [];
@@ -173,6 +175,7 @@ void app_main(void)
 
     spi_il9341_config();
     ws2812_init(PIN_WS2812_LED, CNT_WS2812_LED, RMT_CH_WS2812_LED);
+
 
     nvs_flash_init();
 //    tcpip_adapter_init();

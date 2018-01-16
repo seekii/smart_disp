@@ -40,22 +40,6 @@
 #define MADCTL_BGR 0x08
 #define MADCTL_MH  0x04
 
-/*
- * Control Pins
- * */
-
-
-
-
-
-/*
- * Software SPI Macros
- * */
-
-#define SPI_WRITE(v)           spi_write_data(v)
-#define SPI_WRITE16(s)         SPI_WRITE((s) >> 8); SPI_WRITE(s)
-#define SPI_WRITE32(l)         SPI_WRITE((l) >> 24); SPI_WRITE((l) >> 16); SPI_WRITE((l) >> 8); SPI_WRITE(l)
-
 
 
 
@@ -69,28 +53,15 @@ static void il9341_set_addr_window(uint16_t x, uint16_t y, uint16_t w, uint16_t 
 static void writeColor(uint16_t color, uint32_t len);
 static void il9341_gpio_init(void);
 static void spi_write_command(uint8_t cmd);
-static void spi_write_data(uint8_t data);
-
+static void spi_write_data_u8(uint8_t data);
+static void spi_write_data_u16(uint16_t data);
+static void spi_write_data_u32(uint32_t data);
 
 /*Local variables*/
 uint16_t _height = 0;
 uint16_t _width = 0;
 uint32_t _freq = 0;
 uint16_t rotation = 0;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -101,110 +72,110 @@ void il9341_init(void)
 	il9341_gpio_init();
 
 	spi_write_command(0xEF);
-	spi_write_data(0x03);
-	spi_write_data(0x80);
-	spi_write_data(0x02);
+	spi_write_data_u8(0x03);
+	spi_write_data_u8(0x80);
+	spi_write_data_u8(0x02);
 
 	spi_write_command(0xCF);
-	spi_write_data(0x00);
-	spi_write_data(0XC1);
-	spi_write_data(0X30);
+	spi_write_data_u8(0x00);
+	spi_write_data_u8(0XC1);
+	spi_write_data_u8(0X30);
 
 	spi_write_command(0xED);
-	spi_write_data(0x64);
-	spi_write_data(0x03);
-	spi_write_data(0X12);
-	spi_write_data(0X81);
+	spi_write_data_u8(0x64);
+	spi_write_data_u8(0x03);
+	spi_write_data_u8(0X12);
+	spi_write_data_u8(0X81);
 
 	spi_write_command(0xE8);
-	spi_write_data(0x85);
-	spi_write_data(0x00);
-	spi_write_data(0x78);
+	spi_write_data_u8(0x85);
+	spi_write_data_u8(0x00);
+	spi_write_data_u8(0x78);
 
 	spi_write_command(0xCB);
-	spi_write_data(0x39);
-	spi_write_data(0x2C);
-	spi_write_data(0x00);
-	spi_write_data(0x34);
-	spi_write_data(0x02);
+	spi_write_data_u8(0x39);
+	spi_write_data_u8(0x2C);
+	spi_write_data_u8(0x00);
+	spi_write_data_u8(0x34);
+	spi_write_data_u8(0x02);
 
 	spi_write_command(0xF7);
-	spi_write_data(0x20);
+	spi_write_data_u8(0x20);
 
 	spi_write_command(0xEA);
-	spi_write_data(0x00);
-	spi_write_data(0x00);
+	spi_write_data_u8(0x00);
+	spi_write_data_u8(0x00);
 
 	spi_write_command(ILI9341_PWCTR1);    //Power control
-	spi_write_data(0x23);   //VRH[5:0]
+	spi_write_data_u8(0x23);   //VRH[5:0]
 
 	spi_write_command(ILI9341_PWCTR2);    //Power control
-	spi_write_data(0x10);   //SAP[2:0];BT[3:0]
+	spi_write_data_u8(0x10);   //SAP[2:0];BT[3:0]
 
 	spi_write_command(ILI9341_VMCTR1);    //VCM control
-	spi_write_data(0x3e);
-	spi_write_data(0x28);
+	spi_write_data_u8(0x3e);
+	spi_write_data_u8(0x28);
 
 	spi_write_command(ILI9341_VMCTR2);    //VCM control2
-	spi_write_data(0x86);  //--
+	spi_write_data_u8(0x86);  //--
 
 	spi_write_command(ILI9341_MADCTL);    // Memory Access Control
-	spi_write_data(0x48);
+	spi_write_data_u8(0x48);
 
 	spi_write_command(ILI9341_VSCRSADD); // Vertical scroll
-	SPI_WRITE16(0);                 // Zero
+	spi_write_data_u16(0);                 // Zero
 
 	spi_write_command(ILI9341_PIXFMT);
-	spi_write_data(0x55);
+	spi_write_data_u8(0x55);
 
 	spi_write_command(ILI9341_FRMCTR1);
-	spi_write_data(0x00);
-	spi_write_data(0x18);
+	spi_write_data_u8(0x00);
+	spi_write_data_u8(0x18);
 
 	spi_write_command(ILI9341_DFUNCTR);    // Display Function Control
-	spi_write_data(0x08);
-	spi_write_data(0x82);
-	spi_write_data(0x27);
+	spi_write_data_u8(0x08);
+	spi_write_data_u8(0x82);
+	spi_write_data_u8(0x27);
 
 	spi_write_command(0xF2);    // 3Gamma Function Disable
-	spi_write_data(0x00);
+	spi_write_data_u8(0x00);
 
 	spi_write_command(ILI9341_GAMMASET);    //Gamma curve selected
-	spi_write_data(0x01);
+	spi_write_data_u8(0x01);
 
 	spi_write_command(ILI9341_GMCTRP1);    //Set Gamma
-	spi_write_data(0x0F);
-	spi_write_data(0x31);
-	spi_write_data(0x2B);
-	spi_write_data(0x0C);
-	spi_write_data(0x0E);
-	spi_write_data(0x08);
-	spi_write_data(0x4E);
-	spi_write_data(0xF1);
-	spi_write_data(0x37);
-	spi_write_data(0x07);
-	spi_write_data(0x10);
-	spi_write_data(0x03);
-	spi_write_data(0x0E);
-	spi_write_data(0x09);
-	spi_write_data(0x00);
+	spi_write_data_u8(0x0F);
+	spi_write_data_u8(0x31);
+	spi_write_data_u8(0x2B);
+	spi_write_data_u8(0x0C);
+	spi_write_data_u8(0x0E);
+	spi_write_data_u8(0x08);
+	spi_write_data_u8(0x4E);
+	spi_write_data_u8(0xF1);
+	spi_write_data_u8(0x37);
+	spi_write_data_u8(0x07);
+	spi_write_data_u8(0x10);
+	spi_write_data_u8(0x03);
+	spi_write_data_u8(0x0E);
+	spi_write_data_u8(0x09);
+	spi_write_data_u8(0x00);
 
 	spi_write_command(ILI9341_GMCTRN1);    //Set Gamma
-	spi_write_data(0x00);
-	spi_write_data(0x0E);
-	spi_write_data(0x14);
-	spi_write_data(0x03);
-	spi_write_data(0x11);
-	spi_write_data(0x07);
-	spi_write_data(0x31);
-	spi_write_data(0xC1);
-	spi_write_data(0x48);
-	spi_write_data(0x08);
-	spi_write_data(0x0F);
-	spi_write_data(0x0C);
-	spi_write_data(0x31);
-	spi_write_data(0x36);
-	spi_write_data(0x0F);
+	spi_write_data_u8(0x00);
+	spi_write_data_u8(0x0E);
+	spi_write_data_u8(0x14);
+	spi_write_data_u8(0x03);
+	spi_write_data_u8(0x11);
+	spi_write_data_u8(0x07);
+	spi_write_data_u8(0x31);
+	spi_write_data_u8(0xC1);
+	spi_write_data_u8(0x48);
+	spi_write_data_u8(0x08);
+	spi_write_data_u8(0x0F);
+	spi_write_data_u8(0x0C);
+	spi_write_data_u8(0x31);
+	spi_write_data_u8(0x36);
+	spi_write_data_u8(0x0F);
 
 	spi_write_command(ILI9341_SLPOUT);    //Exit Sleep
 	//delay(120);
@@ -245,7 +216,7 @@ void il9341_set_rotation(uint8_t m)
 	}
 
 	spi_write_command(ILI9341_MADCTL);
-	spi_write_data(m);
+	spi_write_data_u8(m);
 
 }
 
@@ -258,7 +229,7 @@ void il9341_scroll_to(uint16_t y)
 {
 	spi_write_command(ILI9341_VSCRSADD);
 
-	SPI_WRITE16(y);
+	spi_write_data_u16(y);
 }
 
 
@@ -267,32 +238,27 @@ void il9341_scroll_to(uint16_t y)
 
 static void il9341_set_addr_window(uint16_t x, uint16_t y, uint16_t w, uint16_t h)
 {
-	uint32_t xa = ((uint32_t) x << 16) | (x + w - 1);
-	uint32_t ya = ((uint32_t) y << 16) | (y + h - 1);
-	spi_write_command(ILI9341_CASET); // Column addr set
-	SPI_WRITE32(xa);
-	spi_write_command(ILI9341_PASET); // Row addr set
-	SPI_WRITE32(ya);
-	spi_write_command(ILI9341_RAMWR); // write to RAM
+    uint32_t xa = ((uint32_t) x << 16) | (x + w - 1);
+    uint32_t ya = ((uint32_t) y << 16) | (y + h - 1);
+    spi_write_command(ILI9341_CASET); // Column addr set
+    spi_write_data_u32(xa);
+    spi_write_command(ILI9341_PASET); // Row addr set
+    spi_write_data_u32(ya);
+
+    spi_write_command(ILI9341_RAMWR); // write to RAM
 }
 
 static void pushColor(uint16_t color)
 {
-
-	SPI_WRITE16(color);
-
-
+    spi_write_data_u16(color);
 }
 
 static void writeColor(uint16_t color, uint32_t len)
 {
-
-	for (uint32_t t = 0; t < len; t++)
-	{
-		pushColor(color);
-	}
-	return;
-
+    for(uint32_t t = 0; t < len; t++)
+    {
+        pushColor(color);
+    }
 }
 
 /*Write one pixel directly*/
@@ -377,15 +343,36 @@ static void il9341_gpio_init(void)
 
 static void spi_write_command(uint8_t cmd)
 {
-	spi_write_u(SPI_IL9341_DEV, &cmd, 1, (void*) ILI9341_DC_TRANSFER_COMMAND);
+    spi_write_u(SPI_IL9341_DEV, &cmd, 1, (void*) ILI9341_DC_TRANSFER_COMMAND);
 }
 
-static void spi_write_data(uint8_t data)
+static void spi_write_data_u8(uint8_t data)
 {
 
-	spi_write_u(SPI_IL9341_DEV, &data, 1, (void*) ILI9341_DC_TRANSFER_DATA);        //Should have had no issues.
+    spi_write_u(SPI_IL9341_DEV, &data, 1, (void*) ILI9341_DC_TRANSFER_DATA);        //Should have had no issues.
 }
 
+static void spi_write_data_u16(uint16_t data)
+{
+    uint8_t buff[2];
+
+    buff[0] = (data >> 8);
+    buff[1] = (data);
+
+    spi_write_u(SPI_IL9341_DEV, buff, 2, (void*) ILI9341_DC_TRANSFER_DATA);        //Should have had no issues.
+}
+
+static void spi_write_data_u32(uint32_t data)
+{
+    uint8_t buff[4];
+
+    buff[0] = (data >> 24);
+    buff[1] = (data >> 16);
+    buff[2] = (data >> 8);
+    buff[3] = (data);
+
+    spi_write_u(SPI_IL9341_DEV, buff, 4, (void*) ILI9341_DC_TRANSFER_DATA);        //Should have had no issues.
+}
 
 void spi_il9341_transfer_callback(spi_transaction_t *t)
 {
