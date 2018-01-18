@@ -7,6 +7,7 @@
 # please read the ESP-IDF documents if you need to do this.
 #
 
+CFLAGS += -D LOG_LOCAL_LEVEL=ESP_LOG_DEBUG
 
 COMPONENT_SRCDIRS = . drivers/lcd/ drivers/spi/ /drivers/neo_pixel/
 COMPONENT_ADD_INCLUDEDIRS = . drivers/lcd/ drivers/spi/ /drivers/neo_pixel/
