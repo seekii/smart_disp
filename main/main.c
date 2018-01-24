@@ -18,6 +18,10 @@
 
 #include "sdkconfig.h"
 #include <esp_log.h>
+#include <esp_intr_alloc.h>
+
+
+
 
 
 extern const unsigned char bmp_water [];
@@ -27,36 +31,50 @@ extern const unsigned char bmp_temperature [];
 
 static char tag[] = "test_intr";
 static QueueHandle_t q1;
+static QueueHandle_t q2;
 
 #define TEST_GPIO (13)
 
 static void handler(void *args) {
-    gpio_num_t gpio;
-    gpio = TEST_GPIO;
-    xQueueSendToBackFromISR(q1, &gpio, NULL);
+
+    uint32_t tick_val = xTaskGetTickCountFromISR();
+
+
+    xQueueSendToBackFromISR(q1, &tick_val, NULL);
 }
 
 void power_handle_task(void *ignore) {
-    ESP_LOGD(tag, ">> test1_task");
+
     gpio_num_t gpio;
-    q1 = xQueueCreate(10, sizeof(gpio_num_t));
+    q1 = xQueueCreate(10, sizeof(uint32_t));
+    q2 = xQueueCreate(5, sizeof(uint32_t));
 
     gpio_config_t gpioConfig;
     gpioConfig.pin_bit_mask = GPIO_SEL_13;
     gpioConfig.mode         = GPIO_MODE_INPUT;
     gpioConfig.pull_up_en   = GPIO_PULLUP_DISABLE;
     gpioConfig.pull_down_en = GPIO_PULLDOWN_ENABLE;
-    gpioConfig.intr_type    = GPIO_INTR_POSEDGE;
+    gpioConfig.intr_type    = GPIO_INTR_NEGEDGE;
     gpio_config(&gpioConfig);
 
-    gpio_install_isr_service(0);
+    gpio_install_isr_service(ESP_INTR_FLAG_EDGE);
     gpio_isr_handler_add(TEST_GPIO, handler, NULL   );
 
 
+    static uint32_t pre_tick_val;
+    static uint32_t tick_val;
+    static uint32_t tick_diff;
+
     while(1) {
-        ESP_LOGD(tag, "Waiting on interrupt queue");
-        BaseType_t rc = xQueueReceive(q1, &gpio, portMAX_DELAY);
-        ESP_LOGD(tag, "Woke from interrupt queue wait: %d", rc);
+
+        BaseType_t rc = xQueueReceive(q1, &tick_val, portMAX_DELAY);
+
+        tick_diff = tick_val - pre_tick_val;
+        xQueueSendToBack(q2, &tick_diff, NULL);
+
+       // ESP_LOGD(tag, "time diff: %d", tick_val-pre_tick_val );
+            pre_tick_val = tick_val;
+
     }
 
     vTaskDelete(NULL);
@@ -114,7 +132,7 @@ void ws2812_task(void *pvParameters)
 
         ws2812_show();
 
-        vTaskDelay(50 / portTICK_PERIOD_MS);
+        vTaskDelay(100 / portTICK_PERIOD_MS);
     }
 }
 
@@ -133,6 +151,9 @@ void main_display_task(void *pvParameter)
 
     uint16_t x = 0;
     uint16_t y = 0;
+
+
+    static uint32_t tick_rcv;
 
     cp437(0);
     setTextWrap(1);
@@ -162,7 +183,7 @@ void main_display_task(void *pvParameter)
 //    setTextColor(ILI9341_GREEN);
 //    setCursor(60, 90);
 //    writeText("1.05");
-    gfx_write_dec(60, 90, ILI9341_GREEN, FONT_SIZE_3, -456, WITH_SIGN, DIR_FORWARD);
+  //  gfx_write_dec(60, 90, ILI9341_GREEN, FONT_SIZE_3, -456, WITH_SIGN, DIR_FORWARD);
 
 
     setTextColor(ILI9341_RED);
@@ -193,8 +214,11 @@ void main_display_task(void *pvParameter)
     uint8_t xx = 0;
     while (true)
     {
-      //  drawChar(100, 100, x, ILI9341_ORANGE, ILI9341_BLACK, 8);
 
+
+       (void) xQueueReceive(q2, &tick_rcv, 1000);
+
+       gfx_write_dec(150, 90, ILI9341_GREEN, FONT_SIZE_3, tick_rcv, WITHOUT_SIGN, DIR_BACKWARD);
 
         if(xx)
         {
@@ -245,7 +269,7 @@ void app_main(void)
 
 
     xTaskCreate(main_display_task, "main_display_task", 1024, NULL, 5, NULL);
-    xTaskCreate(ws2812_task, "ws2812 rainbow demo", 4096, NULL, 6, NULL);
+    xTaskCreate(ws2812_task, "ws2812 rainbow demo", 4096, NULL, 5, NULL);
     xTaskCreate(power_handle_task, "power_handle_task", 4096, NULL, 6, NULL);
 
 }

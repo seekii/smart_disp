@@ -831,11 +831,11 @@ void gfx_write_dec(int16_t x, int16_t y, uint16_t color, uint8_t size, uint32_t 
 
     if (use_sign)
     {
-        len = sprintf(buff, "%+d", val);
+        len = sprintf(buff, "%+05d", val);
     }
     else
     {
-        len = sprintf(buff, "%d", val);
+        len = sprintf(buff, "%05d", val);
     }
 
     buff[len] = '\0';
@@ -843,6 +843,8 @@ void gfx_write_dec(int16_t x, int16_t y, uint16_t color, uint8_t size, uint32_t 
     setCursor( x,  y);
     setTextColor(color);
     setTextSize(size);
+
+    setTextColor2(color, ILI9341_BLACK);
 
     writeText(buff, direction);
 }
